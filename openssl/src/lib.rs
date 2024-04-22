@@ -194,9 +194,6 @@ type LenType = libc::size_t;
 #[cfg(not(boringssl))]
 type LenType = libc::c_int;
 
-#[cfg(boringssl)]
-type SLenType = libc::ssize_t;
-#[cfg(not(boringssl))]
 type SLenType = libc::c_int;
 
 #[inline]

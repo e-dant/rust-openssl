@@ -360,7 +360,10 @@ impl Asn1Time {
             let s = CString::new(s).unwrap();
 
             let time = Asn1Time::new()?;
+            #[cfg(ossl111)]
             cvt(ffi::ASN1_TIME_set_string_X509(time.as_ptr(), s.as_ptr()))?;
+            #[cfg(boringssl)]
+            cvt(ffi::ASN1_TIME_set_string(time.as_ptr(), s.as_ptr()))?;
 
             Ok(time)
         }

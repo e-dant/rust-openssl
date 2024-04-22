@@ -2452,12 +2452,15 @@ cfg_if! {
 }
 
 cfg_if! {
-    if #[cfg(any(ossl110, libressl350, boringssl))] {
+    if #[cfg(any(ossl110, libressl350))] {
         use ffi::X509_OBJECT_free;
     } else {
         #[allow(bad_style)]
         unsafe fn X509_OBJECT_free(x: *mut ffi::X509_OBJECT) {
             ffi::X509_OBJECT_free_contents(x);
+            #[cfg(boringssl)]
+            ffi::OPENSSL_free(x as *mut libc::c_void);
+            #[cfg(not(boringssl))]
             ffi::CRYPTO_free(x as *mut libc::c_void);
         }
     }
@@ -2551,7 +2554,7 @@ impl X509PurposeRef {
         unsafe {
             let sname = CString::new(sname).unwrap();
             cfg_if! {
-                if #[cfg(any(ossl110, libressl280, boringssl))] {
+                if #[cfg(any(ossl110, libressl280))] {
                     let purpose = cvt_n(ffi::X509_PURPOSE_get_by_sname(sname.as_ptr() as *const _))?;
                 } else {
                     let purpose = cvt_n(ffi::X509_PURPOSE_get_by_sname(sname.as_ptr() as *mut _))?;

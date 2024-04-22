@@ -1,5 +1,5 @@
 use cfg_if::cfg_if;
-use libc::c_int;
+use std::convert::TryInto;
 use std::marker::PhantomData;
 use std::ptr;
 use std::slice;
@@ -21,11 +21,11 @@ impl<'a> MemBioSlice<'a> {
     pub fn new(buf: &'a [u8]) -> Result<MemBioSlice<'a>, ErrorStack> {
         ffi::init();
 
-        assert!(buf.len() <= c_int::max_value() as usize);
+        assert!(buf.len() <= crate::LenType::max_value() as usize);
         let bio = unsafe {
             cvt_p(BIO_new_mem_buf(
                 buf.as_ptr() as *const _,
-                buf.len() as crate::SLenType,
+                (buf.len() as crate::LenType).try_into().unwrap(),
             ))?
         };
 
