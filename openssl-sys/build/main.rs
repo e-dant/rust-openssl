@@ -180,12 +180,8 @@ fn validate_headers(include_dirs: &[PathBuf]) -> Version {
     // as our own #[cfg] directives. That way the `ossl10x.rs` bindings can
     // account for compile differences and such.
     println!("cargo:rerun-if-changed=build/expando.c");
-    let mut gcc = cc::Build::new();
-    gcc.includes(include_dirs);
-    let expanded = match gcc.file("build/expando.c").try_expand() {
-        Ok(expanded) => expanded,
-        Err(e) => {
-            panic!(
+    let perr = |e: cc::Error| {
+        panic!(
                 "
 Header expansion error:
 {:?}
@@ -211,6 +207,17 @@ See rust-openssl documentation for more information:
 ",
                 e
             );
+    };
+    let mut gcc = cc::Build::new();
+    gcc.includes(include_dirs);
+    let expanded = match gcc.file("build/expando.c").try_expand() {
+        Ok(expanded) => expanded,
+        _ => {
+            gcc.compiler("cc");
+            match gcc.file("build/expando.c").try_expand() {
+                Ok(expanded) => expanded,
+                Err(e) => panic!("{:?}", e),
+            }
         }
     };
     let expanded = String::from_utf8(expanded).unwrap();
