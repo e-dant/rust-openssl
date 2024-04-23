@@ -210,11 +210,12 @@ See rust-openssl documentation for more information:
     };
     let mut gcc = cc::Build::new();
     gcc.includes(include_dirs);
-    let expanded = match gcc.file("build/expando.c").try_expand() {
+    let expandable = gcc.file("build/expando.c");
+    let expanded = match expandable.try_expand() {
         Ok(expanded) => expanded,
         _ => {
             gcc.compiler("cc");
-            match gcc.file("build/expando.c").try_expand() {
+            match expandable.try_expand() {
                 Ok(expanded) => expanded,
                 Err(e) => panic!("{:?}", e),
             }
