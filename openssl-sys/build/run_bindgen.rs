@@ -192,11 +192,32 @@ pub fn run_boringssl(include_dirs: &[PathBuf]) {
         .arg("--")
         .arg(format!("--target={}", env::var("TARGET").unwrap()));
 
+    if let Some(sysroot) = env::var_os("SYSROOT") {
+        bindgen_cmd.arg("--sysroot").arg(sysroot);
+    }
+
+    if let Some(cflags) = env::var_os(format!("CFLAGS_{}", env::var("TARGET").unwrap())) {
+        for flag in cflags.to_string_lossy().split_whitespace() {
+            bindgen_cmd.arg(flag);
+        }
+    } else if let Some(cflags) = env::var_os("CFLAGS") {
+        for flag in cflags.to_string_lossy().split_whitespace() {
+            bindgen_cmd.arg(flag);
+        }
+    }
+
     for include_dir in include_dirs {
         bindgen_cmd.arg("-I").arg(include_dir.display().to_string());
     }
 
-    let result = bindgen_cmd.status().expect("bindgen failed to execute");
+    let result = match bindgen_cmd.status() {
+        Ok(result) => result,
+        Err(e) => panic!(
+            "Failed to execute bindgen: {}\nCommand was: {}",
+            e,
+            bindgen_cmd.get_program().to_string_lossy()
+        ),
+    };
     assert!(result.success());
 
     cc::Build::new()

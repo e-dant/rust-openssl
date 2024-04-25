@@ -182,7 +182,7 @@ fn validate_headers(include_dirs: &[PathBuf]) -> Version {
     println!("cargo:rerun-if-changed=build/expando.c");
     let perr = |cc, e: cc::Error| {
         panic!(
-                "
+            "
 Compiled with:
 {:?}
 
@@ -208,9 +208,8 @@ See rust-openssl documentation for more information:
 
     https://docs.rs/openssl
 ",
-                cc,
-                e
-            );
+            cc, e
+        );
     };
     let mut gcc = cc::Build::new();
     gcc.includes(include_dirs);
